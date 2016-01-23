@@ -1,0 +1,9 @@
+<resources>
+	<string name="app_name">DesignSpec Overlay</string>
+	<string name="title_show_keylines">Show keylines &amp; metrics</string>
+	<string name="description_show_keylines">Show keylines and metrics overlaid on all Activities</string>
+	<string name="title_selected_asset">Keyline specification file</string>
+	<string name="description_selected_asset"><![CDATA[The currently selected keyline & metrics asset file is %s]]></string>
+	<string name="description_selected_asset_none"><![CDATA[<i>No keyline & metric specifications found</i>]]></string>
+	<string name="title_select_asset">Select a keylines specification</string>
+</resources>

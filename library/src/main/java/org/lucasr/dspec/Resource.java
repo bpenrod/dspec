@@ -19,7 +19,6 @@ package org.lucasr.dspec;
 import android.content.Context;
 import android.content.res.Resources;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -28,16 +27,22 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 
-class RawResource {
-    public static JSONObject getAsJSON(Resources resources, int id) throws IOException {
+class Resource {
+    public static JSONObject getRawResourceAsJSON(Resources resources, int id) throws IOException {
+        return getAsJSON(resources.openRawResource(id));
+    }
+
+    public static JSONObject getAssetAsJSON(Context context, String fileName) throws IOException {
+        return getAsJSON(context.getAssets().open(fileName));
+    }
+
+    private static JSONObject getAsJSON(InputStream is) throws IOException {
+        if (is == null) {
+            return null;
+        }
+
         InputStreamReader reader = null;
-
         try {
-            final InputStream is = resources.openRawResource(id);
-            if (is == null) {
-                return null;
-            }
-
             reader = new InputStreamReader(is, "UTF-8");
 
             final char[] buffer = new char[1024];

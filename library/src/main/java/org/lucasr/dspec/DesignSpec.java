@@ -16,14 +16,12 @@
 
 package org.lucasr.dspec;
 
-import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
@@ -491,12 +489,12 @@ public class DesignSpec extends Drawable {
                     break;
 
                 case RIGHT:
-                    position1 = width - spacing.offset + spacing.size;
+                    position1 = width - (spacing.offset + spacing.size);
                     position2 = width - spacing.offset;
                     break;
 
                 case BOTTOM:
-                    position1 = height - spacing.offset + spacing.size;
+                    position1 = height - (spacing.offset + spacing.size);
                     position2 = height - spacing.offset;
                     break;
 
@@ -588,28 +586,61 @@ public class DesignSpec extends Drawable {
 
         final JSONObject json;
         try {
-            json = RawResource.getAsJSON(resources, resId);
+            json = Resource.getRawResourceAsJSON(resources, resId);
         } catch (IOException e) {
             throw new IllegalStateException("Could not read design spec resource", e);
         }
 
-        final float density = resources.getDisplayMetrics().density;
+        spec.configureFromJSON(json);
 
-        spec.setBaselineGridCellSize(density * json.optInt(JSON_KEY_BASELINE_GRID_CELL_SIZE,
+        return spec;
+    }
+
+    /**
+     * Creates a new {@link DesignSpec} instance from an asset file using a {@link View}
+     * that will provide the {@link DesignSpec}'s intrinsic dimensions.
+     *
+     * @param view The {@link View} who will own the new {@link DesignSpec} instance.
+     * @param assetFileName The name of an asset file in this application's assets directory.
+     * @return The newly created {@link DesignSpec} instance.
+     */
+    public static DesignSpec fromAsset(View view, String assetFileName) {
+        final Resources resources = view.getResources();
+        final DesignSpec spec = new DesignSpec(resources, view);
+        if (assetFileName == null) {
+            return spec;
+        }
+
+        final JSONObject json;
+        try {
+            json = Resource.getAssetAsJSON(view.getContext(), assetFileName);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read design spec resource", e);
+        }
+
+        spec.configureFromJSON(json);
+
+        return spec;
+    }
+
+    private void configureFromJSON(JSONObject json) {
+        final float density = mDensity;
+
+        setBaselineGridCellSize(density * json.optInt(JSON_KEY_BASELINE_GRID_CELL_SIZE,
                 DEFAULT_BASELINE_GRID_CELL_SIZE_DIP));
 
-        spec.setBaselineGridVisible(json.optBoolean(JSON_KEY_BASELINE_GRID_VISIBLE,
+        setBaselineGridVisible(json.optBoolean(JSON_KEY_BASELINE_GRID_VISIBLE,
                 DEFAULT_BASELINE_GRID_VISIBLE));
-        spec.setKeylinesVisible(json.optBoolean(JSON_KEY_KEYLINES_VISIBLE,
+        setKeylinesVisible(json.optBoolean(JSON_KEY_KEYLINES_VISIBLE,
                 DEFAULT_KEYLINES_VISIBLE));
-        spec.setSpacingsVisible(json.optBoolean(JSON_KEY_SPACINGS_VISIBLE,
+        setSpacingsVisible(json.optBoolean(JSON_KEY_SPACINGS_VISIBLE,
                 DEFAULT_SPACINGS_VISIBLE));
 
-        spec.setBaselineGridColor(Color.parseColor(json.optString(JSON_KEY_BASELINE_GRID_COLOR,
+        setBaselineGridColor(Color.parseColor(json.optString(JSON_KEY_BASELINE_GRID_COLOR,
                 DEFAULT_BASELINE_GRID_COLOR)));
-        spec.setKeylinesColor(Color.parseColor(json.optString(JSON_KEY_KEYLINES_COLOR,
+        setKeylinesColor(Color.parseColor(json.optString(JSON_KEY_KEYLINES_COLOR,
                 DEFAULT_KEYLINE_COLOR)));
-        spec.setSpacingsColor(Color.parseColor(json.optString(JSON_KEY_SPACINGS_COLOR,
+        setSpacingsColor(Color.parseColor(json.optString(JSON_KEY_SPACINGS_COLOR,
                 DEFAULT_SPACING_COLOR)));
 
         final JSONArray keylines = json.optJSONArray(JSON_KEY_KEYLINES);
@@ -618,7 +649,7 @@ public class DesignSpec extends Drawable {
             for (int i = 0; i < keylineCount; i++) {
                 try {
                     final JSONObject keyline = keylines.getJSONObject(i);
-                    spec.addKeyline(keyline.getInt(JSON_KEY_OFFSET),
+                    addKeyline(keyline.getInt(JSON_KEY_OFFSET),
                             From.valueOf(keyline.getString(JSON_KEY_FROM).toUpperCase()));
                 } catch (JSONException e) {
                     continue;
@@ -632,14 +663,12 @@ public class DesignSpec extends Drawable {
             for (int i = 0; i < spacingCount; i++) {
                 try {
                     final JSONObject spacing = spacings.getJSONObject(i);
-                    spec.addSpacing(spacing.getInt(JSON_KEY_OFFSET), spacing.getInt(JSON_KEY_SIZE),
+                    addSpacing(spacing.getInt(JSON_KEY_OFFSET), spacing.getInt(JSON_KEY_SIZE),
                             From.valueOf(spacing.getString(JSON_KEY_FROM).toUpperCase()));
                 } catch (JSONException e) {
                     continue;
                 }
             }
         }
-
-        return spec;
     }
 }
